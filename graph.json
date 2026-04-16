@@ -1,0 +1,48 @@
+{
+  "nodes": [
+    { "id": "raw_orders",         "label": "raw_orders",         "type": "source",       "sub": "S3 · JSON",    "desc": "Raw order events from the e-commerce platform", "tags": ["orders"] },
+    { "id": "raw_customers",      "label": "raw_customers",      "type": "source",       "sub": "S3 · CSV",     "desc": "Customer master data extracted from CRM", "tags": [""]  },
+    { "id": "raw_products",       "label": "raw_products",       "type": "source",       "sub": "S3 · Parquet", "desc": "Product catalog with pricing and metadata", "tags": [""] },
+    { "id": "raw_sessions",       "label": "raw_sessions",       "type": "source",       "sub": "Kinesis",      "desc": "Web session events (clickstream)", "tags": ["events"] },
+
+    { "id": "stg_orders",         "label": "stg_orders",         "type": "staging",      "sub": "dbt staging",  "desc": "Cleaned and typed order records", "tags": ["orders"] },
+    { "id": "stg_customers",      "label": "stg_customers",      "type": "staging",      "sub": "dbt staging",  "desc": "Deduplicated customer profiles", "tags": [""] },
+    { "id": "stg_products",       "label": "stg_products",       "type": "staging",      "sub": "dbt staging",  "desc": "Enriched product dimensions", "tags": [""] },
+    { "id": "stg_sessions",       "label": "stg_sessions",       "type": "staging",      "sub": "dbt staging",  "desc": "Sessionised web events with user mapping", "tags": ["events"] },
+
+    { "id": "int_order_items",    "label": "int_order_items",    "type": "intermediate", "sub": "dbt model",    "desc": "Exploded order line items with product join", "tags": ["orders"] },
+    { "id": "int_customer_attrs", "label": "int_customer_attrs", "type": "intermediate", "sub": "dbt model",    "desc": "Customer LTV, segments and engagement scores", "tags": [""] },
+
+    { "id": "fct_orders",         "label": "fct_orders",         "type": "mart",         "sub": "fact table",   "desc": "Order-grain fact: revenue, items, discounts", "tags": [""] },
+    { "id": "dim_customers",      "label": "dim_customers",      "type": "mart",         "sub": "dimension",    "desc": "SCD-2 customer dimension with history", "tags": [""] },
+    { "id": "dim_products",       "label": "dim_products",       "type": "mart",         "sub": "dimension",    "desc": "Product dimension with category hierarchy", "tags": [""] },
+
+    { "id": "rpt_revenue",        "label": "rpt_revenue",        "type": "report",       "sub": "PowerBI",      "desc": "Daily / weekly revenue dashboard"  , "tags": [""] },
+    { "id": "rpt_cohorts",        "label": "rpt_cohorts",        "type": "report",       "sub": "Tableau",      "desc": "Customer cohort retention analysis", "tags": [""] },
+    { "id": "rpt_catalog",        "label": "rpt_catalog",        "type": "report",       "sub": "PowerBI",      "desc": "Product performance & inventory report", "tags": [""] }
+  ],
+  "edges": [
+    { "from": "raw_orders",         "to": "stg_orders" },
+    { "from": "raw_customers",      "to": "stg_customers" },
+    { "from": "raw_products",       "to": "stg_products" },
+    { "from": "raw_sessions",       "to": "stg_sessions" },
+
+    { "from": "stg_orders",         "to": "int_order_items" },
+    { "from": "stg_products",       "to": "int_order_items" },
+    { "from": "stg_customers",      "to": "int_customer_attrs" },
+    { "from": "stg_sessions",       "to": "int_customer_attrs" },
+
+    { "from": "int_order_items",    "to": "fct_orders" },
+    { "from": "int_customer_attrs", "to": "fct_orders" },
+    { "from": "stg_customers",      "to": "dim_customers" },
+    { "from": "int_customer_attrs", "to": "dim_customers" },
+    { "from": "stg_products",       "to": "dim_products" },
+
+    { "from": "fct_orders",         "to": "rpt_revenue" },
+    { "from": "dim_customers",      "to": "rpt_revenue" },
+    { "from": "fct_orders",         "to": "rpt_cohorts" },
+    { "from": "dim_customers",      "to": "rpt_cohorts" },
+    { "from": "fct_orders",         "to": "rpt_catalog" },
+    { "from": "dim_products",       "to": "rpt_catalog" }
+  ]
+}
